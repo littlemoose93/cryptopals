@@ -24,7 +24,8 @@ pub fn break_single_char_xor(ciphertext: &[u8]) -> u8 {
     best_key
 }
 
-fn score_plain_text(txt: &[u8]) -> f64 {
+/// Scores a plain text message for how "english" it is
+pub fn score_plain_text(txt: &[u8]) -> f64 {
     let text = String::from_utf8_lossy(txt);
     let mut counts: HashMap<char, f64> = HashMap::new();
 
