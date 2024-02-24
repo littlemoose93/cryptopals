@@ -2,27 +2,23 @@ use base64::Engine;
 
 // Converts a hex string to bytes
 pub fn hex_to_bytes(s: &str) -> Option<Vec<u8>> {
-    let mut temp = Vec::new();
-
-    for c in s.chars() {
-        temp.push(char_to_byte(c)?);
-    }
-
     let mut out = Vec::new();
-    for a in temp.as_slice().chunks_exact(2) {
-        let composit_value = a[0] << 4 | a[1];
+
+    for byte in s.as_bytes().chunks_exact(2) {
+        let composit_value = char_to_byte(byte[0])? << 4 | char_to_byte(byte[1])?;
         out.push(composit_value);
     }
 
     Some(out)
 }
 
+/// Converts bytes into a base64 encoded string
 pub fn bytes_to_base64(v: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(v)
 }
 
-fn char_to_byte(c: char) -> Option<u8> {
-    match c {
+fn char_to_byte<C: Into<char>>(c: C) -> Option<u8> {
+    match c.into() {
         '0' => Some(0),
         '1' => Some(1),
         '2' => Some(2),
