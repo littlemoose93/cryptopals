@@ -7,6 +7,20 @@ pub fn xor_exact(a: &[u8], b: &[u8]) -> Option<Vec<u8>> {
     Some(a.iter().zip(b.iter()).map(|(a_i, b_i)| a_i ^ b_i).collect())
 }
 
+/// Xors two slices of the same length together
+pub fn xor_repeat(text: &[u8], key: &[u8]) -> Option<Vec<u8>> {
+    if key.is_empty() {
+        return None;
+    }
+
+    Some(
+        text.iter()
+            .zip(key.iter().cycle())
+            .map(|(a_i, b_i)| a_i ^ b_i)
+            .collect(),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
