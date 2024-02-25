@@ -17,6 +17,11 @@ pub fn bytes_to_base64(v: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(v)
 }
 
+/// Converts bytes into a base64 encoded string
+pub fn base64_to_bytes(v: &str) -> Vec<u8> {
+    base64::engine::general_purpose::STANDARD.decode(v).unwrap()
+}
+
 fn char_to_byte<C: Into<char>>(c: C) -> Option<u8> {
     match c.into() {
         '0' => Some(0),
