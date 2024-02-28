@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 base64 = "0.21.7"
 rand = "0.8.5"
+aes = "0.8.4"

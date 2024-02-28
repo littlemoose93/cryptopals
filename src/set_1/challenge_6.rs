@@ -129,6 +129,8 @@ mod tests {
     }
 
     mod hamming_distance_study {
+        use rand::Rng;
+
         use super::*;
 
         #[test]
@@ -138,9 +140,11 @@ mod tests {
             let mut total_distance = 0;
             for _ in 0..samples {
                 let a = rand_char();
-                let b = rand_char();
+                // let b = rand_char();
+                let b: u8 = rand::random();
                 let c = rand_char();
-                let d = rand_char();
+                // let d = rand_char();
+                let d: u8 = rand::random();
 
                 let e = a ^ b;
                 let f = c ^ d;
@@ -174,11 +178,54 @@ mod tests {
 
         // Provbabaly need to sample with english letter frequency to get more accurate statistics
         fn rand_char() -> u8 {
-            let mut c = rand::random();
-            while !(c as char).is_alphabetic() {
-                c = rand::random();
+            let samples = vec![
+                (' ', 0.1),
+                ('e', 0.1116),
+                ('a', 0.0849),
+                ('r', 0.0758),
+                ('i', 0.07544),
+                ('o', 0.0754),
+                ('t', 0.0695),
+                ('n', 0.0665),
+                ('s', 0.0573),
+                ('l', 0.0549),
+                ('c', 0.0453),
+                ('u', 0.0363),
+                ('d', 0.0338),
+                ('p', 0.0316),
+                ('m', 0.0301),
+                ('h', 0.0300),
+                ('g', 0.0247),
+                ('b', 0.0207),
+                ('f', 0.0181),
+                ('y', 0.0178),
+                ('w', 0.0129),
+                ('k', 0.0110),
+                ('v', 0.0101),
+                ('x', 0.0029),
+                ('z', 0.0027),
+                ('j', 0.0019),
+                ('q', 0.0019),
+            ];
+
+            let mut total_weight = 0.0;
+            for w in samples.iter().map(|a| a.1) {
+                total_weight += w;
             }
-            c
+
+            let mut rng = rand::thread_rng();
+            let selected = rng.gen_range(0.0..total_weight);
+
+            let mut seen = 0.0;
+
+            for (c, w) in samples {
+                seen += w;
+                if seen > selected {
+                    return c as u8;
+                }
+            }
+
+            ' ' as u8
         }
     }
 }
