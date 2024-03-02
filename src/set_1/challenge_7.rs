@@ -3,7 +3,7 @@ use aes::{
     Aes128,
 };
 
-//
+/// A very slow AES128-ECB
 pub fn aes_128_ecb(ciphertext: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
     let mut out = Vec::new();
     let exact_key = GenericArray::from(*key);
