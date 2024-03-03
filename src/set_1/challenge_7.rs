@@ -1,10 +1,10 @@
 use aes::{
-    cipher::{generic_array::GenericArray, BlockDecrypt, KeyInit},
+    cipher::{generic_array::GenericArray, BlockDecrypt, BlockEncrypt, KeyInit},
     Aes128,
 };
 
-/// A very slow AES128-ECB
-pub fn aes_128_ecb(ciphertext: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
+/// A very slow AES128-ECB decryptor
+pub fn aes_128_ecb_decryt(ciphertext: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
     let mut out = Vec::new();
     let exact_key = GenericArray::from(*key);
 
@@ -13,6 +13,22 @@ pub fn aes_128_ecb(ciphertext: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
         let mut block = GenericArray::from(chunk_array);
         let cipher = Aes128::new(&exact_key);
         cipher.decrypt_block(&mut block);
+        out.extend_from_slice(block.as_slice());
+    }
+
+    Some(out)
+}
+
+/// A very slow AES128-ECB encryptor
+pub fn aes_128_ecb_encrypt(plain_text: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
+    let mut out = Vec::new();
+    let exact_key = GenericArray::from(*key);
+
+    for chunk in plain_text.chunks(16) {
+        let chunk_array: [u8; 16] = chunk.try_into().unwrap();
+        let mut block = GenericArray::from(chunk_array);
+        let cipher = Aes128::new(&exact_key);
+        cipher.encrypt_block(&mut block);
         out.extend_from_slice(block.as_slice());
     }
 
@@ -39,9 +55,21 @@ mod tests {
         let ciphertext = base64_to_bytes(&ciphertext_b64);
         let key = "YELLOW SUBMARINE".as_bytes();
 
-        let plain_text = aes_128_ecb(&ciphertext, key.try_into().unwrap()).unwrap();
+        let plain_text = aes_128_ecb_decryt(&ciphertext, key.try_into().unwrap()).unwrap();
 
         println!("{}", String::from_utf8_lossy(&plain_text));
         assert!(false);
+    }
+
+    #[test]
+    fn encrypt_and_decrypt() {
+        let plain_text = [0; 48].to_vec();
+        let key = [1; 16];
+
+        let cipher_text = aes_128_ecb_encrypt(&plain_text, &key).unwrap();
+        assert_ne!(cipher_text, plain_text);
+
+        let decypted_plain_text = aes_128_ecb_decryt(&cipher_text, &key).unwrap();
+        assert_eq!(plain_text, decypted_plain_text);
     }
 }
