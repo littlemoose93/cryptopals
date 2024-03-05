@@ -7,7 +7,7 @@ use crate::{
     set_2::{aes_128_cbc_encrypt, pkcs_7},
 };
 
-fn random_aes_key() -> [u8; 16] {
+pub fn random_aes_key() -> [u8; 16] {
     rand::random()
 }
 
@@ -34,7 +34,7 @@ pub fn encryption_oracle(plain_text: &[u8]) -> Vec<u8> {
     cippher_text
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum BlockMode {
     ECB,
     CBC,
