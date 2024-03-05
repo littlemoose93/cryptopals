@@ -9,3 +9,11 @@ edition = "2021"
 base64 = "0.21.7"
 rand = "0.8.5"
 aes = "0.8.4"
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "aes_ecb_hidden_message_discovery_simple"
+harness = false
+

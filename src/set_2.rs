@@ -5,4 +5,5 @@ mod challenge_9;
 
 pub use challenge_10::{aes_128_cbc_decrypt, aes_128_cbc_encrypt};
 pub use challenge_11::{detect_encryption_mode, BlockMode};
+pub use challenge_12::find_hidden_message_simple;
 pub use challenge_9::pkcs_7;

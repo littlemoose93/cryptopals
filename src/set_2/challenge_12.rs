@@ -23,27 +23,27 @@ fn build_ecb_encryptor() -> impl for<'a> Fn(&'a [u8]) -> Vec<u8> {
     }
 }
 
-pub fn find_hidden_message() -> String {
+pub fn find_hidden_message_simple(a: usize) -> String {
     // find block size
     let encrypt = build_ecb_encryptor();
-    let mut stim = Vec::new();
+    let mut stim = Vec::with_capacity(a);
     let padded_hidden_message_length = encrypt(&stim).len();
     while encrypt(&stim).len() == padded_hidden_message_length {
         stim.push(0);
     }
     let block_size = encrypt(&stim).len() - padded_hidden_message_length;
-    println!("stim: {}", stim.len());
+    // println!("stim: {}", stim.len());
     let hidden_message_length = padded_hidden_message_length - stim.len();
-    println!("hidden_message_length: {}", hidden_message_length);
+    // println!("hidden_message_length: {}", hidden_message_length);
 
-    println!("block_size: {block_size}");
+    // println!("block_size: {block_size}");
     debug_assert!(block_size == 16);
 
     let mode = detect_encryption_mode(&encrypt);
     debug_assert!(mode == BlockMode::ECB);
-    println!("mode: {mode:?}");
+    // println!("mode: {mode:?}");
 
-    println!("hidden_message_length: {padded_hidden_message_length:?}");
+    // println!("hidden_message_length: {padded_hidden_message_length:?}");
 
     let mut decrypted_string = Vec::new();
     let all_zeros = (0..padded_hidden_message_length)
@@ -53,7 +53,7 @@ pub fn find_hidden_message() -> String {
 
     for pos in 1..=hidden_message_length {
         let zero_stimulus = all_zeros[pos..].to_vec();
-        // Checking the last vlock
+
         let target = encrypt(&zero_stimulus)
             [(padded_hidden_message_length - block_size)..padded_hidden_message_length]
             .to_vec();
@@ -74,7 +74,6 @@ pub fn find_hidden_message() -> String {
         }
         debug_assert!(decrypted_string.len() == pos, "pos: {pos}");
     }
-    println!("decrypted message length: {}", decrypted_string.len());
 
     String::from_utf8_lossy(&decrypted_string).to_string()
 }
@@ -85,8 +84,10 @@ mod tests {
 
     #[test]
     fn attack() {
-        let msg = find_hidden_message();
+        let expected_string = "Rollin' in my 5.0\nWith my rag-top down so my hair can blow\nThe girlies on standby waving just to say hi\nDid you stop? No, I just drove by\n";
+        let msg = find_hidden_message_simple(8);
         println!("{msg}");
+        assert_eq!(expected_string, &msg);
     }
 
     #[test]
