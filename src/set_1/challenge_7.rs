@@ -40,7 +40,7 @@ mod tests {
     use std::io::Read;
 
     use super::*;
-    use crate::set_1::base64_to_bytes;
+    use crate::set_1::{base64_to_bytes, xor_repeat};
 
     #[test]
     fn sample() {

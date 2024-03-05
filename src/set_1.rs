@@ -13,3 +13,4 @@ pub use challenge_3::{break_single_char_xor, score_plain_text};
 pub use challenge_4::find_encrypted_line;
 pub use challenge_6::break_repeated_xor;
 pub use challenge_7::{aes_128_ecb_decryt, aes_128_ecb_encrypt};
+pub use challenge_8::is_aes_ecb;

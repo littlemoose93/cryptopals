@@ -7,7 +7,6 @@ pub fn is_aes_ecb(ciphertext: &[u8]) -> bool {
     for (idx1, chunk_one) in ciphertext.chunks(16).enumerate() {
         for (idx2, chunk_two) in ciphertext.chunks(16).enumerate() {
             if chunk_one == chunk_two && idx1 != idx2 {
-                println!("Block numbers: {idx1} and {idx2}");
                 return true;
             }
         }
