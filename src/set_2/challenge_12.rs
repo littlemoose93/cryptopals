@@ -1,11 +1,16 @@
 //! Simple ECB Decryption?
 
+use aes::{
+    cipher::{generic_array::GenericArray, KeyInit},
+    Aes128,
+};
+
 use crate::{
-    set_1::{aes_128_ecb_encrypt, base64_to_bytes},
+    set_1::{aes_128_ecb_encrypt, aes_128_ecb_encrypt_in_place, base64_to_bytes},
     set_2::{challenge_11::random_aes_key, detect_encryption_mode, BlockMode},
 };
 
-use super::pkcs_7;
+use super::{challenge_9::pkcs_7_in_place, pkcs_7};
 
 /// Build an ecb encryptor function that will use the same key every time.
 ///
@@ -13,13 +18,17 @@ use super::pkcs_7;
 fn build_ecb_encryptor() -> impl for<'a> Fn(&'a [u8]) -> Vec<u8> {
     let key = random_aes_key();
     let hidden_message = base64_to_bytes("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK");
-    move |prefix| {
-        let mut plain_text = prefix.to_vec();
-        plain_text.extend_from_slice(&hidden_message);
 
-        let block_sized_text = pkcs_7(&plain_text, 16);
-        let cipher_text = aes_128_ecb_encrypt(&block_sized_text, &key).unwrap();
-        cipher_text
+    let exact_key = GenericArray::from(key);
+    let cipher = Aes128::new(&exact_key);
+
+    move |prefix| {
+        let mut prefixed_hidden_message = prefix.to_vec();
+        prefixed_hidden_message.extend_from_slice(&hidden_message);
+
+        pkcs_7_in_place(&mut prefixed_hidden_message, 16);
+        aes_128_ecb_encrypt_in_place(&mut prefixed_hidden_message, &cipher).unwrap();
+        prefixed_hidden_message
     }
 }
 
@@ -61,8 +70,8 @@ pub fn find_hidden_message_simple(a: usize) -> String {
             *stimulus.get_mut(target_byte).unwrap() = v;
 
             let slice_start = pos + padded_hidden_message_length - block_size;
-            let test_slice = &stimulus[slice_start..(slice_start + 16)];
-            let candidate = &encrypt(test_slice)[..16];
+            let test_slice = &stimulus[slice_start..(slice_start + block_size)];
+            let candidate = &encrypt(test_slice)[..block_size];
 
             if candidate == target {
                 break;

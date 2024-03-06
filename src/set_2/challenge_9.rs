@@ -12,6 +12,15 @@ pub fn pkcs_7(input: &[u8], block_size: u8) -> Vec<u8> {
     output
 }
 
+/// Applys padding to the input such that it the output is an integer multiple of the block_size
+pub fn pkcs_7_in_place(input: &mut Vec<u8>, block_size: u8) {
+    let padding_byte = block_size - (input.len() % (block_size as usize)) as u8;
+
+    for _ in 0..padding_byte {
+        input.push(padding_byte);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

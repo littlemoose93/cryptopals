@@ -30,6 +30,18 @@ pub fn aes_128_ecb_encrypt(plain_text: &[u8], key: &[u8; 16]) -> Option<Vec<u8>>
     Some(encrypt_in_place)
 }
 
+/// A very slow AES128-ECB encryptor
+pub fn aes_128_ecb_encrypt_in_place<'a>(
+    plain_text: &'a mut [u8],
+    cipher: &Aes128,
+) -> Option<&'a mut [u8]> {
+    for block in plain_text.chunks_mut(16) {
+        cipher.encrypt_block(GenericArray::from_mut_slice(block));
+    }
+
+    Some(plain_text)
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Read;
