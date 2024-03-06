@@ -8,10 +8,10 @@ pub fn aes_128_ecb_decryt(ciphertext: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> 
     let mut out = Vec::new();
     let exact_key = GenericArray::from(*key);
 
+    let cipher = Aes128::new(&exact_key);
     for chunk in ciphertext.chunks(16) {
         let chunk_array: [u8; 16] = chunk.try_into().unwrap();
         let mut block = GenericArray::from(chunk_array);
-        let cipher = Aes128::new(&exact_key);
         cipher.decrypt_block(&mut block);
         out.extend_from_slice(block.as_slice());
     }
@@ -21,13 +21,13 @@ pub fn aes_128_ecb_decryt(ciphertext: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> 
 
 /// A very slow AES128-ECB encryptor
 pub fn aes_128_ecb_encrypt(plain_text: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
-    let mut out = Vec::new();
+    let mut out = Vec::with_capacity(plain_text.len());
     let exact_key = GenericArray::from(*key);
+    let cipher = Aes128::new(&exact_key);
 
     for chunk in plain_text.chunks(16) {
         let chunk_array: [u8; 16] = chunk.try_into().unwrap();
         let mut block = GenericArray::from(chunk_array);
-        let cipher = Aes128::new(&exact_key);
         cipher.encrypt_block(&mut block);
         out.extend_from_slice(block.as_slice());
     }
@@ -40,7 +40,7 @@ mod tests {
     use std::io::Read;
 
     use super::*;
-    use crate::set_1::{base64_to_bytes, xor_repeat};
+    use crate::set_1::base64_to_bytes;
 
     #[test]
     fn sample() {

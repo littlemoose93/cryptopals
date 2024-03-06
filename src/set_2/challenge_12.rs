@@ -12,8 +12,8 @@ use super::pkcs_7;
 /// Every new call to const_ecb_encryptor will produce a new function the encypts under a different key
 fn build_ecb_encryptor() -> impl for<'a> Fn(&'a [u8]) -> Vec<u8> {
     let key = random_aes_key();
+    let hidden_message = base64_to_bytes("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK");
     move |prefix| {
-        let hidden_message = base64_to_bytes("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK");
         let mut plain_text = prefix.to_vec();
         plain_text.extend_from_slice(&hidden_message);
 
@@ -45,37 +45,29 @@ pub fn find_hidden_message_simple(a: usize) -> String {
 
     // println!("hidden_message_length: {padded_hidden_message_length:?}");
 
-    let mut decrypted_string = Vec::new();
-    let all_zeros = (0..padded_hidden_message_length)
+    let mut stimulus = (0..padded_hidden_message_length)
         .into_iter()
         .map(|_| 0u8)
         .collect::<Vec<u8>>();
 
     for pos in 1..=hidden_message_length {
-        let zero_stimulus = all_zeros[pos..].to_vec();
+        let target = &encrypt(&stimulus[pos..padded_hidden_message_length])
+            [(padded_hidden_message_length - block_size)..padded_hidden_message_length];
 
-        let target = encrypt(&zero_stimulus)
-            [(padded_hidden_message_length - block_size)..padded_hidden_message_length]
-            .to_vec();
+        stimulus.push(0);
 
         for v in 0..=255 {
-            let mut sample = zero_stimulus.clone();
-            // Add known string
-            sample.extend_from_slice(&decrypted_string);
-            sample.push(v);
-            debug_assert!(sample.len() == padded_hidden_message_length);
-            let candidate = encrypt(&sample)
-                [(padded_hidden_message_length - block_size)..padded_hidden_message_length]
-                .to_vec();
+            *stimulus.last_mut().unwrap() = v;
+
+            let candidate = &encrypt(&stimulus[pos..])
+                [(padded_hidden_message_length - block_size)..padded_hidden_message_length];
             if candidate == target {
-                decrypted_string.push(v);
                 break;
             }
         }
-        debug_assert!(decrypted_string.len() == pos, "pos: {pos}");
     }
 
-    String::from_utf8_lossy(&decrypted_string).to_string()
+    String::from_utf8_lossy(&stimulus[padded_hidden_message_length..]).to_string()
 }
 
 #[cfg(test)]
