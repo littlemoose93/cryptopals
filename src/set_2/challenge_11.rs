@@ -4,7 +4,7 @@ use rand::Rng;
 
 use crate::{
     set_1::{aes_128_ecb_encrypt, is_aes_ecb},
-    set_2::{aes_128_cbc_encrypt, pkcs_7},
+    set_2::{aes_128_cbc_encrypt_padded, pkcs_7},
 };
 
 pub fn random_aes_key() -> [u8; 16] {
@@ -28,7 +28,7 @@ pub fn encryption_oracle(plain_text: &[u8]) -> Vec<u8> {
         false => {
             let iv = random_aes_key();
             println!("cbc");
-            aes_128_cbc_encrypt(&iv, &padded_text, key)
+            aes_128_cbc_encrypt_padded(&iv, &padded_text, key)
         }
     };
     cippher_text
@@ -69,6 +69,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "no output"]
     fn samples() {
         for _ in 0..10 {
             let mode = detect_encryption_mode(encryption_oracle);

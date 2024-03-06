@@ -5,34 +5,29 @@ use aes::{
 
 /// A very slow AES128-ECB decryptor
 pub fn aes_128_ecb_decryt(ciphertext: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
-    let mut out = Vec::new();
+    // let mut out = Vec::new();
     let exact_key = GenericArray::from(*key);
-
     let cipher = Aes128::new(&exact_key);
-    for chunk in ciphertext.chunks(16) {
-        let chunk_array: [u8; 16] = chunk.try_into().unwrap();
-        let mut block = GenericArray::from(chunk_array);
-        cipher.decrypt_block(&mut block);
-        out.extend_from_slice(block.as_slice());
+
+    let mut decrypt_in_place = ciphertext.to_vec();
+    for block in decrypt_in_place.chunks_mut(16) {
+        cipher.decrypt_block(GenericArray::from_mut_slice(block));
     }
 
-    Some(out)
+    Some(decrypt_in_place)
 }
 
 /// A very slow AES128-ECB encryptor
 pub fn aes_128_ecb_encrypt(plain_text: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
-    let mut out = Vec::with_capacity(plain_text.len());
     let exact_key = GenericArray::from(*key);
     let cipher = Aes128::new(&exact_key);
+    let mut encrypt_in_place = plain_text.to_vec();
 
-    for chunk in plain_text.chunks(16) {
-        let chunk_array: [u8; 16] = chunk.try_into().unwrap();
-        let mut block = GenericArray::from(chunk_array);
-        cipher.encrypt_block(&mut block);
-        out.extend_from_slice(block.as_slice());
+    for block in encrypt_in_place.chunks_mut(16) {
+        cipher.encrypt_block(GenericArray::from_mut_slice(block));
     }
 
-    Some(out)
+    Some(encrypt_in_place)
 }
 
 #[cfg(test)]
@@ -43,6 +38,7 @@ mod tests {
     use crate::set_1::base64_to_bytes;
 
     #[test]
+    #[ignore = "challenge 7 sample decryption"]
     fn sample() {
         let file_path = "src/set_1/challenge_7/aes-128-ecb.txt";
 

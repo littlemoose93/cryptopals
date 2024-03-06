@@ -35,10 +35,9 @@ mod tests {
 
         for (line_number, hex_line) in ciphertext_hex.lines().enumerate() {
             if is_aes_ecb(hex_to_bytes(hex_line).unwrap().as_slice()) {
-                println!("Found ECB line! ({line_number})\n{hex_line}")
+                println!("Found ECB line! ({line_number})\n{hex_line}");
+                assert!(line_number == 132);
             }
         }
-
-        assert!(false);
     }
 }

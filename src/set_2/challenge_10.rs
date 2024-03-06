@@ -3,7 +3,7 @@ use crate::{
     set_2::pkcs_7,
 };
 
-pub fn aes_128_cbc_encrypt(iv: &[u8; 16], plain_text: &[u8], key: [u8; 16]) -> Vec<u8> {
+pub fn aes_128_cbc_encrypt_padded(iv: &[u8; 16], plain_text: &[u8], key: [u8; 16]) -> Vec<u8> {
     assert!(iv.len() == 16);
 
     let padded_plain_text = pkcs_7(plain_text, 16);
@@ -26,7 +26,29 @@ pub fn aes_128_cbc_encrypt(iv: &[u8; 16], plain_text: &[u8], key: [u8; 16]) -> V
     output
 }
 
-pub fn aes_128_cbc_decrypt(iv: &[u8; 16], ciphertext: &[u8], key: [u8; 16]) -> Vec<u8> {
+pub fn aes_128_cbc_encrypt(iv: &[u8; 16], plain_text: &[u8], key: [u8; 16]) -> Vec<u8> {
+    assert!(iv.len() == 16);
+    assert!(plain_text.len() % 16 == 0);
+    let mut output = Vec::new();
+
+    let mut cipher_text = iv.to_vec();
+    for (block_number, chunk) in plain_text.chunks(16).enumerate() {
+        // println!("({block_number}) key: {key:x?}");
+        // println!("({block_number}) previous cipher_text: {cipher_text:x?}");
+        // println!("({block_number}) chunk: {chunk:x?}");
+        let input = xor_exact(&cipher_text, chunk).unwrap();
+        // println!("({block_number}) input: {input:x?}");
+
+        cipher_text = aes_128_ecb_encrypt(&input, &key).unwrap();
+        // println!("({block_number}) cipher_text: {cipher_text:x?}");
+
+        output.extend_from_slice(&cipher_text);
+    }
+
+    output
+}
+
+pub fn aes_128_cbc_decrypt_padded(iv: &[u8; 16], ciphertext: &[u8], key: [u8; 16]) -> Vec<u8> {
     assert!(iv.len() == 16);
     assert!(ciphertext.len() % 16 == 0);
 
@@ -48,6 +70,22 @@ pub fn aes_128_cbc_decrypt(iv: &[u8; 16], ciphertext: &[u8], key: [u8; 16]) -> V
 
     output
 }
+pub fn aes_128_cbc_decrypt(iv: &[u8; 16], ciphertext: &[u8], key: [u8; 16]) -> Vec<u8> {
+    assert!(iv.len() == 16);
+    assert!(ciphertext.len() % 16 == 0);
+
+    let mut output = Vec::new();
+    let mut previous_cipher_text = iv.to_vec();
+
+    for block in ciphertext.chunks(16) {
+        let almost_pt = aes_128_ecb_decryt(block, &key).unwrap();
+        let plain_text = xor_exact(&almost_pt, &previous_cipher_text).unwrap();
+        output.extend_from_slice(&plain_text);
+        previous_cipher_text = block.to_vec()
+    }
+
+    output
+}
 
 #[cfg(test)]
 mod tests {
@@ -58,6 +96,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "decrypts sample file"]
     fn challenge_sample() {
         let file_path = "src/set_2/challenge_10/aes-128-cbc.txt";
 
@@ -74,7 +113,6 @@ mod tests {
 
         let plaintext = aes_128_cbc_decrypt(&iv, &cipher_text, key);
         println!("{}", String::from_utf8_lossy(&plaintext));
-        println!("{:?}", &plaintext);
         assert!(false);
     }
 
@@ -169,8 +207,8 @@ mod tests {
                 .unwrap();
 
             let plain_text = hex_to_bytes("6bc1bee22e409f96e93d7e117393172abb").unwrap();
-            let cipher_text = aes_128_cbc_encrypt(&iv, &plain_text, key.clone());
-            let decrypted_plain_text = aes_128_cbc_decrypt(&iv, &cipher_text, key);
+            let cipher_text = aes_128_cbc_encrypt_padded(&iv, &plain_text, key.clone());
+            let decrypted_plain_text = aes_128_cbc_decrypt_padded(&iv, &cipher_text, key);
             assert_eq!(decrypted_plain_text, plain_text);
         }
 

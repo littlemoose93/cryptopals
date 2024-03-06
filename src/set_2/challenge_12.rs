@@ -28,11 +28,12 @@ pub fn find_hidden_message_simple(a: usize) -> String {
     let encrypt = build_ecb_encryptor();
     let mut stim = Vec::with_capacity(a);
     let padded_hidden_message_length = encrypt(&stim).len();
+
     while encrypt(&stim).len() == padded_hidden_message_length {
         stim.push(0);
     }
     let block_size = encrypt(&stim).len() - padded_hidden_message_length;
-    // println!("stim: {}", stim.len());
+
     let hidden_message_length = padded_hidden_message_length - stim.len();
     // println!("hidden_message_length: {}", hidden_message_length);
 
@@ -45,7 +46,7 @@ pub fn find_hidden_message_simple(a: usize) -> String {
 
     // println!("hidden_message_length: {padded_hidden_message_length:?}");
 
-    let mut stimulus = (0..padded_hidden_message_length)
+    let mut stimulus = (0..(padded_hidden_message_length + hidden_message_length))
         .into_iter()
         .map(|_| 0u8)
         .collect::<Vec<u8>>();
@@ -54,13 +55,15 @@ pub fn find_hidden_message_simple(a: usize) -> String {
         let target = &encrypt(&stimulus[pos..padded_hidden_message_length])
             [(padded_hidden_message_length - block_size)..padded_hidden_message_length];
 
-        stimulus.push(0);
-
+        // Change last value until it matches the target block
+        let target_byte = pos + padded_hidden_message_length - 1;
         for v in 0..=255 {
-            *stimulus.last_mut().unwrap() = v;
+            *stimulus.get_mut(target_byte).unwrap() = v;
 
-            let candidate = &encrypt(&stimulus[pos..])
-                [(padded_hidden_message_length - block_size)..padded_hidden_message_length];
+            let slice_start = pos + padded_hidden_message_length - block_size;
+            let test_slice = &stimulus[slice_start..(slice_start + 16)];
+            let candidate = &encrypt(test_slice)[..16];
+
             if candidate == target {
                 break;
             }
@@ -78,7 +81,6 @@ mod tests {
     fn attack() {
         let expected_string = "Rollin' in my 5.0\nWith my rag-top down so my hair can blow\nThe girlies on standby waving just to say hi\nDid you stop? No, I just drove by\n";
         let msg = find_hidden_message_simple(8);
-        println!("{msg}");
         assert_eq!(expected_string, &msg);
     }
 
